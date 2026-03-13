@@ -21,6 +21,8 @@ module tt_um_example (
 reg [3:0] pc; //4-bit Program Counter
 reg [3:0] acc; //4-Bit accumulator
 reg [3:0] output_register //4-bit output register
+reg [3:0] mem_to_send;
+reg mem_write_en;
 wire is_zero = (acc == 4'b0000); // Check if ACC is zero
 always @(posedge clk) begin
         if (!rst_n) begin
@@ -47,17 +49,27 @@ always @(posedge clk) begin
                 4'b1101: acc <= acc | ui_in[3:0]; // OR: bitwise or
                 4'b1000: output_register <= acc;  // OUT: output current ACC content
                 4'b1111: pc  <= pc;               // HALT: Don't move the PC
-                default: acc <= acc;              // NOP: Do nothing
+                4'b0101: begin                    // STORE: Store ACC into memory
+                    mem_to_send <= acc; 
+                    mem_write_en <= 1'b1:
+                end
+                4'b1010: begin                    
+                    acc <= uio_in[3:0];          //LOAD: Load memory into ACC
+                    mem_write_en = 1'b0;
+                end
+                default: begin
+                    acc <= acc;
+                    mem_write_en <= 1'b0;  // NOP: Do nothing
+                end              
             endcase
         end
     end
 
 
 
-assign uo_out = {pc, acc};
-assign uio_out[3:0] = output_register;
-assign uio_out[7:4] = 0;
-assign uio_oe = 0;
+assign uo_out = {pc, output_register};
+assign uio_out = {ui_in[3:0], mem_data_out};
+assign uio_oe = (mem_write_en) ? 8'hFF : 8'h00;
 
 wire _unused = &{ena, uio_in, 1'b0};
 
