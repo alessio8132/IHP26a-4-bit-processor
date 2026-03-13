@@ -20,17 +20,32 @@ module tt_um_example (
   // All output pins must be assigned. If not used, assign to 0.
 reg [3:0] pc; //4-bit Program Counter
 reg [3:0] acc; //4-Bit accumulator
+reg [3:0] output_register //4-bit output register
+wire is_zero = (acc == 4'b0000); // Check if ACC is zero
 always @(posedge clk) begin
         if (!rst_n) begin
             pc  <= 4'b0000;
             acc <= 4'b0000;
         end else begin
-            pc <= pc + 1;
+            if (ui_in[7:4] == 4'b1100) begin
+                pc <= ui_in[3:0]; // Jump to the address in the bottom 4 bits
+            end 
+            if (ui_in[7:4] == 4'b0100) begin
+                pc <= ui_in[3:0]; // Jumpt to address in the buttom 4 bits if ACC is zero
+            end else begin
+                pc <= pc + 1;     // Otherwise, just keep counting
+            end
 
             // DECODE & EXECUTE
             case (ui_in[7:4])      // Look at the top 4 bits
                 4'b0001: acc <= ui_in[3:0];       // LDA: Load bottom 4 bits into acc
                 4'b0010: acc <= acc + ui_in[3:0]; // ADD: Add bottom 4 bits to acc
+                4'b0011: acc <= acc - ui_in[3:0]; // SUB: Subtract bottom 4 bits to ACC
+                4'b0110: acc <= acc << 1;         // SHL: Shift left 
+                4'b0111: acc <= acc ^ ui_in[3:0]; // XOR: bitwise exclusive or
+                4'b1011: acc <= acc & ui_in[3:0]; // AND: bitwise and
+                4'b1101: acc <= acc | ui_in[3:0]; // OR: bitwise or
+                4'b1000: output_register <= acc;  // OUT: output current ACC content
                 4'b1111: pc  <= pc;               // HALT: Don't move the PC
                 default: acc <= acc;              // NOP: Do nothing
             endcase
@@ -40,7 +55,8 @@ always @(posedge clk) begin
 
 
 assign uo_out = {pc, acc};
-assign uio_out = 0;
+assign uio_out[3:0] = output_register;
+assign uio_out[7:4] = 0;
 assign uio_oe = 0;
 
 wire _unused = &{ena, uio_in, 1'b0};

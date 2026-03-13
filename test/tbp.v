@@ -26,17 +26,27 @@ module tb();
 
     // 4. The Test Sequence
     initial begin
-        $dumpfile("sim.vcd"); // Creates the file for GTKWave
+        $dumpfile("sim.vcd");
         $dumpvars(0, tb);
 
+        // 1. Setup initial state
         clk = 0;
-        rst_n = 0; #20 rst_n = 1;  // Start in Reset
-        ui_in = 8'h15; #20; //LDA 5
-        ui_in = 8'h23; #20; //ADD 3
-        ui_in = 8'hF0; #20; //HALT
+        rst_n = 0;   
+        ui_in = 8'h00;
+
+        // 2. Wait a bit, then release reset (Not on a clock edge)
+        #45 rst_n = 1; 
+
+        // 3. Now use clock edges to sync your instructions
+        @(posedge clk); ui_in = 8'h15; // PC 0: Load 5
+        @(posedge clk); ui_in = 8'h23; // PC 1: Add 3
+        @(posedge clk); ui_in = 8'hC1; // PC 2: Jump to 1
+        @(posedge clk); ui_in = 8'h23; // PC 1: Add 3 again
         
-        //#50 rst_n = 1; // Release Reset after 50ns
+        // 4. Force a termination after a few more cycles
+        repeat (10) @(posedge clk);
         
-        #500 $finish; // Stop the simulation after some time
+        $display("Simulation finished successfully!");
+        $finish;
     end
 endmodule
