@@ -20,7 +20,7 @@ module tt_um_example (
   // All output pins must be assigned. If not used, assign to 0.
 reg [3:0] pc; //4-bit Program Counter
 reg [3:0] acc; //4-Bit accumulator
-reg [3:0] output_register //4-bit output register
+reg [3:0] output_register; //4-bit output register
 reg [3:0] mem_to_send;
 reg mem_write_en;
 wire is_zero = (acc == 4'b0000); // Check if ACC is zero
