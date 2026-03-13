@@ -4,6 +4,7 @@
  */
 
 `default_nettype none
+`timescale 1ns/1ps
 
 module tt_um_example (
     input  wire [7:0] ui_in,    // Dedicated inputs
@@ -17,11 +18,31 @@ module tt_um_example (
 );
 
   // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+reg [3:0] pc; //4-bit Program Counter
+reg [3:0] acc; //4-Bit accumulator
+always @(posedge clk) begin
+        if (!rst_n) begin
+            pc  <= 4'b0000;
+            acc <= 4'b0000;
+        end else begin
+            pc <= pc + 1;
 
-  // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+            // DECODE & EXECUTE
+            case (ui_in[7:4])      // Look at the top 4 bits
+                4'b0001: acc <= ui_in[3:0];       // LDA: Load bottom 4 bits into acc
+                4'b0010: acc <= acc + ui_in[3:0]; // ADD: Add bottom 4 bits to acc
+                4'b1111: pc  <= pc;               // HALT: Don't move the PC
+                default: acc <= acc;              // NOP: Do nothing
+            endcase
+        end
+    end
+
+
+
+assign uo_out = {pc, acc};
+assign uio_out = 0;
+assign uio_oe = 0;
+
+wire _unused = &{ena, uio_in, 1'b0};
 
 endmodule
