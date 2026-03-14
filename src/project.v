@@ -77,7 +77,7 @@ always @(posedge clk) begin
 
 assign uo_out = {pc, output_register};
 assign uio_out = 8'b0000_0000; // Not using IO outputs
-assign uio_oe  = 8'b1111_1111; // Not using
+assign uio_oe  = 8'b0000_0000; // Not using IOs, so set all to input mode
 
 
 wire _unused = &{ena, uio_in, 1'b0};

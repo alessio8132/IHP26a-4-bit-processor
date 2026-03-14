@@ -3,14 +3,17 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import FallingEdge
+from cocotb.triggers import FallingEdge, ClockCycles # Add ClockCycles here
 
 async def reset_cpu(dut):
     """Helper task to safely pulse the reset line."""
     dut.ui_in.value = 0b0000_0000
     dut.rst_n.value = 0
-    await FallingEdge(dut.clk)
+    # Hold reset for 2 full clock cycles to guarantee the chip sees it
+    await ClockCycles(dut.clk, 2) 
     dut.rst_n.value = 1
+    # Wait for the next falling edge before feeding the first instruction
+    await FallingEdge(dut.clk)
 
 @cocotb.test()
 async def test_all_opcodes(dut):
