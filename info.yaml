@@ -43,14 +43,14 @@ pinout:
   uo[7]: "pc[3]"
 
   # Bidirectional pins
-  uio[0]: "mem_data[0]"
-  uio[1]: "mem_data[1]"
-  uio[2]: "mem_data[2]"
-  uio[3]: "mem_data[3]"
-  uio[4]: "mem_addr[0]"
-  uio[5]: "mem_addr[1]"
-  uio[6]: "mem_addr[2]"
-  uio[7]: "mem_addr[3]"
+  uio[0]: ""
+  uio[1]: ""
+  uio[2]: ""
+  uio[3]: ""
+  uio[4]: ""
+  uio[5]: ""
+  uio[6]: ""
+  uio[7]: ""
 
 # Do not change!
 yaml_version: 6

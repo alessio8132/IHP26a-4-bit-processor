@@ -17,7 +17,7 @@ async def test_all_opcodes(dut):
     """Test all instructions of the 4-bit CPU."""
     
     # 1. INITIAL SETUP
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     dut.ena.value = 1
@@ -28,7 +28,7 @@ async def test_all_opcodes(dut):
 
     # 2. TEST LDA (Load)
     dut._log.info("Testing LDA: Load 5")
-    await FallingEdge(dut.clk)
+    # Feed instruction immediately after reset
     dut.ui_in.value = 0b0001_0101 # LDA 5 (PC becomes 1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b1000_0000 # OUT   (PC becomes 2)
@@ -39,7 +39,6 @@ async def test_all_opcodes(dut):
 
     # 3. TEST ADD
     dut._log.info("Testing ADD: 5 + 3 = 8")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0001_0101 # LDA 5 (PC becomes 1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0010_0011 # ADD 3 (PC becomes 2)
@@ -52,7 +51,6 @@ async def test_all_opcodes(dut):
 
     # 4. TEST SUB
     dut._log.info("Testing SUB: 7 - 2 = 5")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0001_0111 # LDA 7 (PC=1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0011_0010 # SUB 2 (PC=2)
@@ -65,7 +63,6 @@ async def test_all_opcodes(dut):
 
     # 5. TEST JZ (Jump if Zero)
     dut._log.info("Testing JZ: ACC is 0 after reset, so should jump to PC 9")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0100_1001 # JZ 9 (PC jumps to 9)
     await FallingEdge(dut.clk)
     # Out_reg is 0 from reset. PC is 9. Combined: 0x90
@@ -74,7 +71,6 @@ async def test_all_opcodes(dut):
 
     # 6. TEST JMP (Unconditional Jump)
     dut._log.info("Testing JMP: Jump to PC 12")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b1100_1100 # JMP 12 (PC jumps to 12 / 0xC)
     await FallingEdge(dut.clk)
     # Out_reg is 0. PC is 12 (0xC). Combined: 0xC0
@@ -83,7 +79,6 @@ async def test_all_opcodes(dut):
 
     # 7. TEST SHL (Shift Left)
     dut._log.info("Testing SHL: 3 << 1 = 6")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0001_0011 # LDA 3 (PC=1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0110_0000 # SHL   (PC=2)
@@ -96,7 +91,6 @@ async def test_all_opcodes(dut):
 
     # 8. TEST XOR
     dut._log.info("Testing XOR: 5 ^ 3 = 6")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0001_0101 # LDA 5 (PC=1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0111_0011 # XOR 3 (PC=2)
@@ -109,7 +103,6 @@ async def test_all_opcodes(dut):
 
     # 9. TEST AND
     dut._log.info("Testing AND: 11 & 7 = 3")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0001_1011 # LDA 11 (PC=1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b1011_0111 # AND 7  (PC=2)
@@ -122,7 +115,6 @@ async def test_all_opcodes(dut):
 
     # 10. TEST OR
     dut._log.info("Testing OR: 4 | 2 = 6")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0001_0100 # LDA 4 (PC=1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b1101_0010 # OR 2  (PC=2)
@@ -135,7 +127,6 @@ async def test_all_opcodes(dut):
 
     # 11. TEST OUT (Directly)
     dut._log.info("Testing OUT: Outputting 9 to uo_out")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0001_1001 # LDA 9 (PC=1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b1000_0000 # OUT   (PC=2)
@@ -146,7 +137,6 @@ async def test_all_opcodes(dut):
 
     # 12. TEST INTERNAL RAM (STORE and LOAD)
     dut._log.info("Testing RAM: Store 7 to addr 3, clear ACC, Load from addr 3")
-    await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0001_0111 # LDA 7         (PC=1)
     await FallingEdge(dut.clk)
     dut.ui_in.value = 0b0101_0011 # STORE Addr 3  (PC=2)
