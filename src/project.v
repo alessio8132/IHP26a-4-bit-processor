@@ -49,7 +49,7 @@ always @(posedge clk) begin
                 4'b1011: acc <= acc & ui_in[3:0]; // AND: bitwise and
                 4'b1101: acc <= acc | ui_in[3:0]; // OR: bitwise or
                 4'b1000: output_register <= acc;  // OUT: output current ACC content
-                4'b1111: pc  <= pc;               // HALT: Don't move the PC
+                4'b1111: pc <= pc;               // HALT: Don't move the PC
                 4'b0101: begin                    // STORE: Store ACC into memory
                     mem_to_send <= acc; 
                     mem_write_en <= 1'b1;

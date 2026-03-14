@@ -9,7 +9,7 @@ module tb();
     wire [7:0] uo_out;
 
     // 2. Instantiate your chip (The "Unit Under Test")
-    tt_um_example uut (
+    tt_um_alessio8132 uut (
         .clk(clk),
         .rst_n(rst_n),
         .ui_in(ui_in),
@@ -40,8 +40,8 @@ module tb();
         // 3. Now use clock edges to sync your instructions
         @(posedge clk); ui_in = 8'h15; // PC 0: Load 5
         @(posedge clk); ui_in = 8'h23; // PC 1: Add 3
-        @(posedge clk); ui_in = 8'hC1; // PC 2: Jump to 1
-        @(posedge clk); ui_in = 8'h23; // PC 1: Add 3 again
+        @(posedge clk); ui_in = 8'b10000000; // OUT: Output current ACC content (should be 8)
+        //@(posedge clk); ui_in = 8'h23; // PC 1: Add 3 again
         
         // 4. Force a termination after a few more cycles
         repeat (10) @(posedge clk);
