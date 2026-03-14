@@ -51,7 +51,7 @@ always @(posedge clk) begin
                 4'b1111: pc  <= pc;               // HALT: Don't move the PC
                 4'b0101: begin                    // STORE: Store ACC into memory
                     mem_to_send <= acc; 
-                    mem_write_en <= 1'b1:
+                    mem_write_en <= 1'b1;
                 end
                 4'b1010: begin                    
                     acc <= uio_in[3:0];          //LOAD: Load memory into ACC
