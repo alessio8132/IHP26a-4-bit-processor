@@ -29,12 +29,15 @@ always @(posedge clk) begin
             pc  <= 4'b0000;
             acc <= 4'b0000;
             output_register <= 4'b0000;
+            mem_to_send <= 4'b0000;
+            mem_write_en <= 1'b0;
         end else begin
             if (ui_in[7:4] == 4'b1100) begin
                 pc <= ui_in[3:0]; // Jump to the address in the bottom 4 bits
-            end 
-            if (ui_in[7:4] == 4'b0100) begin
-                pc <= ui_in[3:0]; // Jumpt to address in the buttom 4 bits if ACC is zero
+            end else if(ui_in[7:4] == 4'b1111) begin
+                pc <= pc; // HALT: Don't move the PC
+            end else if (ui_in[7:4] == 4'b0100 && acc == 4'b0000) begin
+                pc <= ui_in[3:0]; // Jump to address in the bottom 4 bits if ACC is zero
             end else begin
                 pc <= pc + 1;     // Otherwise, just keep counting
             end
@@ -49,14 +52,14 @@ always @(posedge clk) begin
                 4'b1011: acc <= acc & ui_in[3:0]; // AND: bitwise and
                 4'b1101: acc <= acc | ui_in[3:0]; // OR: bitwise or
                 4'b1000: output_register <= acc;  // OUT: output current ACC content
-                4'b1111: pc <= pc;               // HALT: Don't move the PC
+                //4'b1111: pc <= pc;               // HALT: Don't move the PC
                 4'b0101: begin                    // STORE: Store ACC into memory
                     mem_to_send <= acc; 
                     mem_write_en <= 1'b1;
                 end
                 4'b1010: begin                    
                     acc <= uio_in[3:0];          //LOAD: Load memory into ACC
-                    mem_write_en = 1'b0;
+                    mem_write_en <= 1'b0;
                 end
                 default: begin
                     acc <= acc;

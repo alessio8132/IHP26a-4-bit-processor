@@ -32,7 +32,7 @@ async def test_project(dut):
     await ClockCycles(dut.clk, 1)
     dut.ui_in.value = 0b10000000 # Output the value of the accumulator to uo_out
     # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
+    await ClockCycles(dut.clk, 2)
 
     # The following assersion is just an example of how to check the output values.
     # Change it to match the actual expected output of your module:

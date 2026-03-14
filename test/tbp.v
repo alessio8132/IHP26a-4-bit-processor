@@ -38,9 +38,9 @@ module tb();
         #45 rst_n = 1; 
 
         // 3. Now use clock edges to sync your instructions
-        @(posedge clk); ui_in = 8'h15; // PC 0: Load 5
-        @(posedge clk); ui_in = 8'h23; // PC 1: Add 3
-        @(posedge clk); ui_in = 8'b10000000; // OUT: Output current ACC content (should be 8)
+        @(posedge clk); #1; ui_in = 8'h15; // PC 0: Load 5
+        @(posedge clk); #1; ui_in = 8'b00100011; // PC 1: Add 3
+        @(posedge clk); #1; ui_in = 8'b10000000; // OUT: Output current ACC content (should be 8)
         //@(posedge clk); ui_in = 8'h23; // PC 1: Add 3 again
         
         // 4. Force a termination after a few more cycles
