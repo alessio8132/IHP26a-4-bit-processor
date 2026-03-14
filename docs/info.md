@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+This is a 4 bit CPU with very basic opcodes for running programs. The input on ui_in is of the form 4 bits opcode - 4 bits value. The output uo_out is of the form 4 bits program counter - 4 bits value. 
 
 ## How to test
 

@@ -6,7 +6,7 @@
 `default_nettype none
 `timescale 1ns/1ps
 
-module tt_um_example (
+module tt_um_alessio8132 (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -28,6 +28,7 @@ always @(posedge clk) begin
         if (!rst_n) begin
             pc  <= 4'b0000;
             acc <= 4'b0000;
+            output_register <= 4'b0000;
         end else begin
             if (ui_in[7:4] == 4'b1100) begin
                 pc <= ui_in[3:0]; // Jump to the address in the bottom 4 bits
@@ -60,6 +61,7 @@ always @(posedge clk) begin
                 default: begin
                     acc <= acc;
                     mem_write_en <= 1'b0;  // NOP: Do nothing
+                    output_register <= output_register;
                 end              
             endcase
         end
