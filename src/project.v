@@ -68,7 +68,7 @@ always @(posedge clk) begin
 
 
 assign uo_out = {pc, output_register};
-assign uio_out = {ui_in[3:0], mem_data_out};
+assign uio_out = {ui_in[3:0], mem_to_send};
 assign uio_oe = (mem_write_en) ? 8'hFF : 8'h00;
 
 wire _unused = &{ena, uio_in, 1'b0};
