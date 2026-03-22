@@ -1,152 +1,157 @@
-// Personal test bench for personalized tests of the verilog.
 `timescale 1ns/1ps
 
-module tb();
-    // 1. Create signals to connect to your chip
+module tb_cpu;
+
+    // Inputs
     reg clk;
     reg rst_n;
     reg [7:0] ui_in;
+
+    // Outputs
+    // Tiny Tapeout Standard Output
     wire [7:0] uo_out;
 
-    // 2. Instantiate your chip (The "Unit Under Test")
+    // Unpack the uo_out pins back into our separate signals!
+    wire [3:0] pc = uo_out[7:4];
+    wire [3:0] output_register = uo_out[3:0];
+
+    // Opcodes for readability
+    localparam LDA   = 4'b0001;
+    localparam ADD   = 4'b0010;
+    localparam SUB   = 4'b0011;
+    localparam STORE = 4'b0101;
+    localparam LOAD  = 4'b1010;
+    localparam OUT   = 4'b1000;
+    localparam AND_op= 4'b1011;
+    localparam JMP   = 4'b1100;
+
+    // Tiny simulated ROM for the Fibonacci sequence
+    reg [7:0] rom [0:15];
+    reg auto_run; // Switch to let the CPU fetch its own instructions
+
+
     tt_um_alessio8132 uut (
         .clk(clk),
         .rst_n(rst_n),
         .ui_in(ui_in),
-        .uo_out(uo_out),
-        .ena(1'b1),
-        .uio_in(8'b0),
-        .uio_oe (),
-        .uio_out ()
-        // ... connect other pins as 0 or unused
+        .uo_out(uo_out), 
+        .uio_in(),   // Not used in this testbench
+        .uio_out(),  // Not used in this testbench
+        .uio_oe(),   // Not used in this testbench
+        .ena(1'b1)   // Always enabled
     );
 
-    // 3. Create the Clock (flips every 10 time units)
-    always #10 clk = ~clk;
+    // Clock Generation (10ns period / 100MHz)
+    always #5 clk = ~clk;
 
-    // 4. The Test Sequence
-    // Helper task to pulse the reset line
+    // Task from your prompt
     task reset_cpu;
         begin
-            ui_in = 8'b0000_0000; // Clear input to avoid unintended instructions
-            rst_n = 1'b0; // Pull reset low
+            ui_in = 8'b0000_0000; 
+            rst_n = 1'b0; 
             @(negedge clk);
-            rst_n = 1'b1; // Release reset
+            rst_n = 1'b1; 
         end
     endtask
 
-    integer j; // Loop counter for dumping RAM contents
-    initial begin
-        $dumpfile("sim.vcd"); // Generate a VCD file for waveform viewing
-        $dumpvars(0, tb);    // Dump all variables in the testbench
-        for (j = 0; j < 16; j = j + 1) begin
-            $dumpvars(0, uut.ram[j]); 
+    // Helper task to feed instructions safely on the falling edge
+    task feed_inst(input [3:0] opcode, input [3:0] value);
+        begin
+            @(negedge clk);
+            ui_in = {opcode, value};
         end
-        // 1. INITIAL SETUP
+    endtask
+
+    // Automatic ROM Fetching block (Runs only when auto_run is high)
+    always @(negedge clk) begin
+        if (auto_run) begin
+            ui_in = rom[pc]; // Feed instruction based on CPU's Program Counter
+        end
+    end
+
+    initial begin
+        // Initialize
         clk = 0;
-        ui_in = 8'b00000000;
-        reset_cpu();
-
-        // 2. TEST LDA (Load)
-        $display("Testing LDA: Load 5");
-        @(negedge clk) ui_in = 8'b0001_0101; // LDA 5
-        @(negedge clk);                      // Wait for execution
-
-        reset_cpu();
-
-        // 3. TEST ADD
-        $display("Testing ADD: 5 + 3 = 8");
-        @(negedge clk) ui_in = 8'b0001_0101; // LDA 5
-        @(negedge clk) ui_in = 8'b0010_0011; // ADD 3
-        @(negedge clk);
-
-        reset_cpu();
-
-        // 4. TEST SUB
-        $display("Testing SUB: 7 - 2 = 5");
-        @(negedge clk) ui_in = 8'b0001_0111; // LDA 7
-        @(negedge clk) ui_in = 8'b0011_0010; // SUB 2
-        @(negedge clk);
-
-        reset_cpu();
-
-        // 5. TEST JZ (Jump if Zero)
-        $display("Testing JZ: ACC is 0 after reset, so should jump to PC 9");
-        // We don't load anything, ACC is 0 from reset
-        @(negedge clk) ui_in = 8'b0100_1001; // JZ 9
-        @(negedge clk);
-
-        reset_cpu();
-
-        // 6. TEST JMP (Unconditional Jump)
-        $display("Testing JMP: Jump to PC 12");
-        @(negedge clk) ui_in = 8'b1100_1100; // JMP 12 (4'b1100)
-        @(negedge clk);
-
-        reset_cpu();
-
-        // 7. TEST SHL (Shift Left)
-        $display("Testing SHL: 3 << 1 = 6");
-        @(negedge clk) ui_in = 8'b0001_0011; // LDA 3
-        @(negedge clk) ui_in = 8'b0110_0000; // SHL (bottom bits ignored)
-        @(negedge clk);
-
-        reset_cpu();
-
-        // 8. TEST XOR
-        $display("Testing XOR: 5 (0101) ^ 3 (0011) = 6 (0110)");
-        @(negedge clk) ui_in = 8'b0001_0101; // LDA 5
-        @(negedge clk) ui_in = 8'b0111_0011; // XOR 3
-        @(negedge clk);
-
-        reset_cpu();
-
-        // 9. TEST AND
-        $display("Testing AND: 11 (1011) & 7 (0111) = 3 (0011)");
-        @(negedge clk) ui_in = 8'b0001_1011; // LDA 11
-        @(negedge clk) ui_in = 8'b1011_0111; // AND 7
-        @(negedge clk);
-
-        reset_cpu();
-
-        // 10. TEST OR
-        $display("Testing OR: 4 (0100) | 2 (0010) = 6 (0110)");
-        @(negedge clk) ui_in = 8'b0001_0100; // LDA 4
-        @(negedge clk) ui_in = 8'b1101_0010; // OR 2
-        @(negedge clk);
+        auto_run = 0;
         
+        $display("--- Starting CPU Tests ---");
         reset_cpu();
 
-        // 11. TEST OUT
-        $display("Testing OUT: Outputting 9 to output_register");
-        @(negedge clk) ui_in = 8'b0001_1001; // LDA 9
-        @(negedge clk) ui_in = 8'b1000_0000; // OUT (bottom bits ignored)
+        // ==========================================
+        // TEST 1: LDA, STORE, ADD, OUT
+        // ==========================================
+        $display("Testing ADD (Memory)...");
+        feed_inst(LDA,   4'd3); // ACC = 3
+        feed_inst(STORE, 4'd0); // RAM[0] = 3
+        feed_inst(LDA,   4'd4); // ACC = 4
+        feed_inst(ADD,   4'd0); // ACC = 4 + RAM[0] = 7
+        feed_inst(OUT,   4'd0); // Output = 7
+        @(negedge clk);         // Wait one tick for output to register
+        $display("Output Register after ADD: %d (Expected: 7)", output_register);
+
+        // ==========================================
+        // TEST 2: SUB (Memory)
+        // ==========================================
+        $display("Testing SUB (Memory)...");
+        feed_inst(LDA,   4'd5); // ACC = 5
+        feed_inst(STORE, 4'd1); // RAM[1] = 5
+        feed_inst(LDA,   4'd9); // ACC = 9
+        feed_inst(SUB,   4'd1); // ACC = 9 - RAM[1] = 4
+        feed_inst(OUT,   4'd0); // Output = 4
         @(negedge clk);
-        
-        reset_cpu();
+        $display("Output Register after SUB: %d (Expected: 4)", output_register);
 
-        // 7. TEST INTERNAL RAM (STORE and LOAD)
-        $display("Testing RAM: Store 7 to addr 3, clear ACC, Load from addr 3");
-        
-        // Step A: Load 7 into Accumulator
-        @(negedge clk) ui_in = 8'b0001_0111; // LDA 7
-        
-        // Step B: Store Accumulator (7) into RAM Address 3
-        @(negedge clk) ui_in = 8'b0101_0011; // STORE to Addr 3
-        
-        // Step C: Clear the Accumulator to prove we aren't cheating
-        @(negedge clk) ui_in = 8'b0001_0000; // LDA 0
-        
-        // Step D: Load RAM Address 3 back into Accumulator
-        @(negedge clk) ui_in = 8'b1010_0011; // LOAD from Addr 3
-        
-        // Step E: Output the result (Should be 7)
-        @(negedge clk) ui_in = 8'b1000_0000; // OUT
+        // ==========================================
+        // TEST 3: AND (Memory)
+        // ==========================================
+        $display("Testing AND (Memory)...");
+        feed_inst(LDA,   4'b1100); // ACC = 12
+        feed_inst(STORE, 4'd2);    // RAM[2] = 12
+        feed_inst(LDA,   4'b1010); // ACC = 10
+        feed_inst(AND_op,4'd2);    // ACC = 1010 & 1100 = 1000 (8)
+        feed_inst(OUT,   4'd0);
         @(negedge clk);
-        reset_cpu();
+        $display("Output Register after AND: %b (Expected: 1000)", output_register);
 
-        // FINISH SIMULATION
-        $display("All tests completed.");
+        // ==========================================
+        // TEST 4: FIBONACCI SEQUENCE & JMP
+        // ==========================================
+        $display("--- Loading Fibonacci ROM ---");
+        reset_cpu();
+        
+        // Let x = RAM[0], y = RAM[1], temp = RAM[2]
+        rom[0]  = {LDA,   4'd0}; // Start x at 0
+        rom[1]  = {STORE, 4'd0}; 
+        rom[2]  = {LDA,   4'd1}; // Start y at 1
+        rom[3]  = {STORE, 4'd1}; 
+        
+        // --- LOOP STARTS HERE (Address 4) ---
+        rom[4]  = {LOAD,  4'd0}; // ACC = x
+        rom[5]  = {OUT,   4'd0}; // Output x!
+        rom[6]  = {ADD,   4'd1}; // ACC = x + y
+        rom[7]  = {STORE, 4'd2}; // temp = x + y
+        rom[8]  = {LOAD,  4'd1}; // ACC = y
+        rom[9]  = {STORE, 4'd0}; // x = y
+        rom[10] = {LOAD,  4'd2}; // ACC = temp
+        rom[11] = {STORE, 4'd1}; // y = temp
+        rom[12] = {JMP,   4'd4}; // Jump back to output and repeat!
+        
+        // Turn on the ROM and let the CPU run wild!
+        auto_run = 1;
+        
+        // Wait and watch the outputs
+        $display("Running Fibonacci... Watch the outputs!");
+        repeat (100) begin
+            @(posedge clk);
+            if (ui_in[7:4] == OUT) begin
+                // Whenever the CPU executes an OUT instruction, print it
+                @(negedge clk); // Wait for the output to register
+                #1 $display("Fibonacci Number: %d", output_register);
+            end
+        end
+
+        $display("Tests Complete!");
         $finish;
     end
+
 endmodule

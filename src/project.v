@@ -48,12 +48,12 @@ always @(posedge clk) begin
             // DECODE & EXECUTE
             case (ui_in[7:4])      // Look at the top 4 bits
                 4'b0001: acc <= ui_in[3:0];       // LDA: Load bottom 4 bits into acc
-                4'b0010: acc <= acc + ui_in[3:0]; // ADD: Add bottom 4 bits to acc
-                4'b0011: acc <= acc - ui_in[3:0]; // SUB: Subtract bottom 4 bits to ACC
+                4'b0010: acc <= acc + ram[ui_in[3:0]]; // ADD: Add value from RAM address ui_in[3:0] to acc
+                4'b0011: acc <= acc - ram[ui_in[3:0]]; // SUB: Subtract value from RAM address ui_in[3:0] from ACC
                 4'b0110: acc <= acc << 1;         // SHL: Shift left 
-                4'b0111: acc <= acc ^ ui_in[3:0]; // XOR: bitwise exclusive or
-                4'b1011: acc <= acc & ui_in[3:0]; // AND: bitwise and
-                4'b1101: acc <= acc | ui_in[3:0]; // OR: bitwise or
+                4'b0111: acc <= acc ^ ram[ui_in[3:0]]; // XOR: bitwise exclusive or with value from RAM address ui_in[3:0]
+                4'b1011: acc <= acc & ram[ui_in[3:0]]; // AND: bitwise and with value from RAM address ui_in[3:0]
+                4'b1101: acc <= acc | ram[ui_in[3:0]]; // OR: bitwise or with value from RAM address ui_in[3:0]
                 4'b1000: output_register <= acc;  // OUT: output current ACC content
                 //4'b1111: pc <= pc;               // HALT: Don't move the PC
                 //Internal RAM STORE
